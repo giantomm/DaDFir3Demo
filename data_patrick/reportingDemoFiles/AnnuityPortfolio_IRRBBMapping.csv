@@ -1,0 +1,6 @@
+contractID,ReportingLine, ReportingLineDesc
+annuity01, 32, Money market mortgages
+annuity02, 32, Money market mortgages
+annuity03, 37, Fixed-rate mortgages
+annuity04, 37, Fixed-rate mortgages
+annuity05, 44, other receivables
