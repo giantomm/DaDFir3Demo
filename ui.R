@@ -9,7 +9,9 @@ fluidPage(
   img(src = "actus-logo.png", height = 77, width = 220,
       style="float:right; padding-right:25px"),
   img(src="Logo_Weiss.png",height = 80, width = 100),
-  
+  # centered
+  img(src = "WIP.png", height = 80, width = 150,
+      style = "margin 0 auto;"),
   # Title and bar with tabs
   navbarPage("
              DaDFiR3 Demo",   #navbar App title
@@ -35,8 +37,8 @@ fluidPage(
                           # selectInput for the accounts
                           selectInput(inputId = "selectAccounts",
                                       label = "Choose an Institution", 
-                                      choices = c("Powerplant", "Uploaded"),
-                                      selected = "Powerplant"
+                                      choices = c("Model Bank", "Uploaded"),
+                                      selected = "Model Bank"
                           ),
                           # fileInput for the accounts
                           fileInput(
@@ -47,8 +49,8 @@ fluidPage(
                           # selectInput for the portfolio
                           selectInput(inputId = "selectPortfolio",
                                       label = "Choose a Portfolio", 
-                                      choices = c("Bonds", "Annuities", "Uploaded"),
-                                      selected = "Bonds"
+                                      choices = c("Test Portfolio", "Uploaded"),
+                                      selected = "Test Portfolio"
                           ),
                           # fileInput for the portfolio
                           fileInput(
@@ -66,7 +68,7 @@ fluidPage(
                           # dateInput for the Status date
                           dateInput(inputId = "statusDate",
                                     label = "Status Date",
-                                    value = "2015-01-01"
+                                    value = "2023-01-01"
                           ),
                           # # numericInput for the months per period
                           # numericInput(inputId = "monthsPerPeriod",
@@ -107,13 +109,30 @@ fluidPage(
                           ),
                         ),  #sidebar panel close
                         mainPanel(
-                          # output current tree structure
-                          verbatimTextOutput("tree"),
-                          DTOutput("portfolioTable"),
+                          tabsetPanel(
+                            tabPanel("Current Settings",
+                                     h4("Accounts Tree"),
+                                     verbatimTextOutput("curAccounts"),
+                                     h4("Mapping"),
+                                     DTOutput("curTreemap"),
+                                     h4("Portofolio"),
+                                     DTOutput("curPortfolioTable"),
+                                     h4("Timeline"),
+                                     verbatimTextOutput("curTimeline"),
+                                     ),
+                            tabPanel("Stored Financial Model",
+                                     h4("Accounts Tree"),
+                                     verbatimTextOutput("fmAccounts"),
+                                     h4("Mapping"),
+                                     DTOutput("fmTreemap"),
+                                     h4("Timeline"),
+                                     verbatimTextOutput("fmTimeline"),
+                                     ),
+                          ), #tabsetPanel close
                         ),  #main panel close
                       ),  #sidebarLayout close
              ), #tabpanel close
-             tabPanel("Modify Portfolio",
+             tabPanel("Modify Financial Model",
                       sidebarLayout(
                         # sidebar panel with input for the institution
                         sidebarPanel(width = 3,
@@ -162,20 +181,15 @@ fluidPage(
                         sidebarPanel(
                           width = 3,
                           # textInput for the analysis ID
-                          textInput(inputId = "analysisID",
-                                    label = "Analysis ID",
-                                    placeholder = "Enter an analysis ID"
-                          ),
-                          # textInput for the analysis description
-                          textInput(inputId = "analysisDescription",
-                                    label = "Analysis Description",
-                                    placeholder = "Enter a description"
+                          textInput(inputId = "scenarioID",
+                                    label = "Scneario ID",
+                                    placeholder = "Enter a Scenario ID"
                           ),
                           # selectInput for the YieldCurve
                           selectInput(inputId = "selectYieldCurve",
                                       label = "Choose a Yield Curve", 
-                                      choices = c("Empty", "Flat", "Steep"),
-                                      selected = "Empty"
+                                      choices = c("Flat", "Steep"),
+                                      selected = "Flat"
                           ),
                           # selectInput for the scenario
                           selectInput(inputId = "selectScenario",
@@ -208,22 +222,20 @@ fluidPage(
                           ),
                         ), #sidebar panel close
                         mainPanel(
-                          # verbatimTextOutput("srv"),
-                          # verbatimTextOutput("strings"),
-                          # verbatimTextOutput("yc"),
-                          # verbatimTextOutput("ptf"),
-                          # verbatimTextOutput("sc"),
                           h4("Current Scenario"),
                           plotOutput("ratesPlot"),
-                          verbatimTextOutput("tl"),
-                          # verbatimTextOutput("cfla"),
-                          # verbatimTextOutput("list"),
-                          verbatimTextOutput("events"),
-                          # verbatimTextOutput("liqvec"),
-                          verbatimTextOutput("liqrep"),
-                          verbatimTextOutput("increp"),
-                          verbatimTextOutput("nomrep"),
-                          DTOutput("eventsTable"),
+                          h4("Simulation Log"),
+                          h5("Events Generated"),
+                          htmlOutput("eventsLog"),
+                          h5("Nominal Value Reports"),
+                          htmlOutput("NMVLog"),
+                          h5("Liquidty Reports"),
+                          htmlOutput("LQLog"),
+                          h5("Net Present Value Reports"),
+                          htmlOutput("NPVLog"),
+                          h5("Income Reports"),
+                          htmlOutput("INCLog"),
+                          # DTOutput("nomDT"),
                           #output dataframe of the respective portfolio
                         )  #main panel close
                       )  #sidebarLayout close
@@ -236,8 +248,8 @@ fluidPage(
                           # selectInput for the report type
                           selectInput(inputId = "selectReportType",
                                       label = "Choose a Report Type", 
-                                      choices = c("Income", "Liquidity", "Nominal Value"),
-                                      selected = "Income"
+                                      choices = c("Liquidity", "Nominal Value", "Net Present Value", "Income"),
+                                      selected = "Liquidity"
                           ),
                           selectInput(inputId = "selectScale",
                                       label = "Choose a Scaling Factor", 
@@ -249,9 +261,9 @@ fluidPage(
                                        value = 0
                           ),
                           # actionButton for the analysis
-                          actionButton(inputId = "analysisButton",
-                                       label = "Display"
-                          ),
+                          # actionButton(inputId = "analysisButton",
+                          #              label = "Display"
+                          # ),
                           # drilldown
                           h4("Drilldown"),
                           selectInput("selectDrilldownNode",
@@ -261,7 +273,10 @@ fluidPage(
                         mainPanel(
                           # verbatimTextOutput("scale"),
                           h3("Here we will display the results in the tree structure"),
+                          htmlOutput("displaySettings"),
+                          uiOutput("display"),
                           h3("There will be a drilldown possibility to the contracts"),
+                          DTOutput("drilldown"),
                         )  #main panel close
                       )  #sidebarLayout close
                
@@ -270,6 +285,7 @@ fluidPage(
                       sidebarLayout(
                         sidebarPanel(
                           width = 3,
+                          h4("Ratios"),
                           checkboxGroupInput("displayLiqRatios", "Choose Liquidity Ratios to Display",
                                              choices = c("Current Ratio", "Loan to Deposit Ratio"),
                                              selected = NULL),
@@ -291,6 +307,12 @@ fluidPage(
                                       label = "Choose Period/Date to Display", 
                                       choices = NULL,
                           ),
+                          h4("Position Development over time"),
+                          selectInput(inputId = "selectPosition",
+                                      label = "Choose a Position", 
+                                      choices = NULL,
+                          ),
+                          # select input for the
                           h4("Download"),
                           downloadButton("downloadPDF", "Download PDF Report"),
                           p("The downloaded report contains the selected ratios for all periods as well as the development over time. 
@@ -350,8 +372,16 @@ fluidPage(
                           fluidRow(
                             column(
                               width = 12,
-                              h3("Here we will display some ratios")
-                            )
+                              h3("Development of selected position over time"),
+                            ),
+                            column(width = 6,
+                                   plotOutput("liquidityPlot"),),
+                            column(width = 6,
+                                   plotOutput("NMVPlot"),),
+                            column(width = 6,
+                                   plotOutput("NPVPlot"),),
+                            column(width = 6,
+                                   plotOutput("incomePlot"),),
                           ),
                           fluidRow(
                             column(
@@ -426,34 +456,42 @@ fluidPage(
                           textInput("serverURL","Specify your server URL",value = "https://dadfir3-app.zhaw.ch/")
                         ),
                         mainPanel(
-                          h2("Interest Rate Scenarios"),
-                          h4("In this tab you can view the four predefined interest rate scenarios. 
-                             Please note that these scenarios are simple linear projections. 
-                             We aim to include the posibility to upload your own risk factor scenarios.", style ="color:black"),
-                          h2("Loan Contract Cashflow"),
-                          h4("In this tab one can specify the terms for a single ACTUS loan contract. 
-                             A cashflow plot and an event list for the specific contract is then generated.", style ="color:black"),
-                          h4("ANN = Mortgage / PAM = Bond", style = "color:black"),
-                          h2("Portfolio Analysis"),
-                          h4("In this tab one can carry out analytics on predefined Portfolios. Income and liquidity metrics are 
-                          shown in the plot and the respective contracts of the portfolio are displayed in the DataTable", style ="color:black"),
-                          h2("Uploaded Portfolio Analysis"),
-                          h4("You can upload a data file from your workstation specifying a portfolio 
-                                        of loan contracts and request ACTUS contract simulation and analysis.",
-                             "The uploaded file must be .csv format and patterned on files:",
-                             tags$a("BondPortfolio.csv", 
-                                    href="https://github.com/fnparr/FEMSdevBase/tree/main/inst/extdata/BondPortfolio.csv", target = "_blank"),
-                             ",  and ",
-                             tags$a("AnnuityPortfolio.csv", 
-                                    href="https://github.com/fnparr/FEMSdevBase/tree/main/inst/extdata/AnnuityPortfolio.csv", target = "_blank"),
-                             " - with any variable rate setting based on Market Object Code YC_EA_AAA.",
-                             "For a more detailed explanation of each contract term, consult the ",
-                             tags$a("ACTUS Data Dictionary",     href="https://www.actusfrf.org/dictionary", target = "_blank"), style ="color:black"),
-                          h2("Specification of ServerURL"),
-                          h4("In case you want to use a local installation of an ACTUS server, you can specify the serverURL in the sidebar of the Help Tab. By default, the ServerURL is set to:", 
-                             tags$a("https://dadfir3-app.zhaw.ch/",href = "https://dadfir3-app.zhaw.ch", target = "_blank") ,"(public actus server)", style = "color:black"),
-                          h4(tags$b("IMPORTANT:"),"If you use a docker version of actus-server your serverURL must be: host.docker.internal:PORT/)", style = "color:black"), 
-                          h4("(Use host.docker.internal:8083/ as default)", style = "color:black"),
+                          h2("Disclaimer"),
+                          h4("This application is being developed in the framework of the DaDFiR3 project. 
+                          Its purpose is to showcase that the ACTUS standard can be used for financial report generation. 
+                          Please note that this app is a work in progress and therefore, bugs or other errors are possible. 
+                             In case you encounter any problems, please contact the developers via: ", style ="color:black"), h4("info@dadfir3.ch",  style ="color:blue"),
+                          h4("The use of this application is at the users own risk. The DaDFiR3 team cannot be held responsible 
+                             for any actions taken based on the output of this application.", style = "color:black"),
+                          h2("Financial Model"),
+                          h4("In this tab, one can specify the financial model for analysis. Apart from the ID and description, 
+                          which are optional fields. One must specify a portfolio of ACTUS contracts, a currency, and the timeline for the analysis of the financial model. 
+                             The timeline defines the number of reports to be generated.", style ="color:black"),
+                          h4("Suggestion: Ideally the mapping file in the yaml format consists of all contract IDs from the Portfolio.", style = "color:black"),
+                          h2("Modify Financial Model"),
+                          h4("In this tab, one can modify the financial model. It is possible to add contracts to the enterprise tree from the portfolio or create 
+                             new contracts and add them to the portfolio and the institution tree.", style ="color:black"),
+                          h2("Simulation"),
+                          h4("In this tab, one can set the scenario for the analysis. One can either choose an example scenario or specify a scenario by 
+                             uploading csv files for reference indices. The currently active scenario is plotted in the top part of this tab. Please note 
+                             that the corresponding Market Object Code needs to be set according to the contracts which are simulated. Once the scenario is specified, 
+                             one can simulate the financial model in this scenario by clicking 'Simulate'.", style ="color:black"),
+                          h2("Analytical Results"),
+                          h4("In this tab, one can display the analytical results from the simulation. To display the results, one must set the report type, 
+                             optionally a scaling factor and the digits for rounding. To provide further insights into the reports, one can drill down to the 
+                             desired level by choosing a Node in the drop-down menu. By selecting a Node in the drop-down menu, a list of all events contributing to 
+                             the result in the selected node is shown.", style = "color:black"),
+                          h2("Financial Reports"),
+                          h4("In this tab, one can create financial reports. The reports are created by selecting the desired elements. 
+                             Currently, this demo app allows to select KPI’s and plot the development of KPI’s or enterprise accounts over time. The financial report 
+                             which is created can be downloaded using the download PDF Report button.", style ="color:black"),
+                          h2("Cash Flow Analysis & Reporting"),
+                          h4("In this tab, one can create the Swiss interest risk Report (ZIR) for the financial model which is analyzed. Please Note that this tab 
+                             is currently only working for the example institution and portfolio which are included in the app. The function to create repricing cashflows 
+                             is currently under development.", style = "color:black"),
+                          h2("Data"),
+                          h4("All included data can be downloaded from the github repository: DaDFiR3/financialModelAnalysis. In case you have problems uploading your own data, 
+                             please carefully check if your data is in the same format as the examples.", style ="color:black"),
                           h2("Contact"),
                           h4("Please note that this App is a Work in Progress. 
                              If you encounter any error messages or other malfunctions, 

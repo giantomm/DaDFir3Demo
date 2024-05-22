@@ -2,7 +2,7 @@ function(input, output, session) {
   # serverURL from Help tab
   serverURL <- reactive({input$serverURL})
   # serverURL <<- "https://dadfir3-app.zhaw.ch/" # needs to be fixed!!!
-  setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+  # setwd(dirname(rstudioapi::getSourceEditorContext()$path))
   
   # reference Index
   rfx_falling <- sampleReferenceIndex("./data/UST5Y_fallingRates.csv",
@@ -20,31 +20,23 @@ function(input, output, session) {
   financialModelDescription <- reactive({input$financialModelDescription})
   enterpriseID <- reactive({input$enterpriseID})
   currency <- reactive({input$selectCurrency})
-  # accounts <- reactiveVal()
-  # portfolio <- reactiveVal()
-  # timeline <- reactiveVal()
-  # portfolio_df <- reactiveVal()
   
   accounts <- reactive({
-    if (input$selectAccounts == "Powerplant") {
-      tree <- AccountsTree("./data/powerplant.yaml")
+    if (input$selectAccounts == "Model Bank") {
+      tree <- AccountsTree("./data/modelBank.yaml")
     } else if (input$selectAccounts == "Uploaded"){
       req(input$accountsFile)
       tree <- AccountsTree(input$accountsFile$datapath)
     }
-    # tree$Set(nodeID = 1:tree$totalCount)
     tree
   })
   
   portfolio <- reactiveVal()
   portfolio_df <- reactiveVal()
   observe({
-    if (input$selectPortfolio == "Bonds") {
-      ptf <- csvx2ptf("./data/BondPortfolio.csv")
-      ptf_df <- read.csv("./data/BondPortfolio.csv")
-    } else if (input$selectPortfolio == "Annuities") {
-      ptf <- csvx2ptf("./data/AnnuityPortfolio.csv")
-      ptf_df <- read.csv("./data/AnnuityPortfolio.csv")
+    if (input$selectPortfolio == "Test Portfolio") {
+      ptf <- csvx2ptf("./data/fmTestPortfolio.csv")
+      ptf_df <- read.csv("./data/fmTestPortfolio.csv")
     } else if (input$selectPortfolio == "Uploaded"){
       req(input$portfolioFile)
       ptf <- csvx2ptf(input$portfolioFile$datapath)
@@ -57,23 +49,6 @@ function(input, output, session) {
                         "rateSpread","description")]
     portfolio_df(ptf_df)
   })
-  
-  # portfolio_df <- reactive({
-  #   if (input$selectPortfolio == "Bonds") {
-  #     ptf_df <- read.csv("./data/BondPortfolio.csv")
-  #   } else if (input$selectPortfolio == "Annuities") {
-  #     ptf_df <- read.csv("./data/AnnuityPortfolio.csv")
-  #   } else if (input$selectPortfolio == "Uploaded"){
-  #     req(input$portfolioFile)
-  #     ptf_df <- read.csv(input$portfolioFile$datapath)
-  #   }
-  #   ptf_df <- ptf_df[,c("contractType","statusDate","contractRole","contractID",
-  #                       "nominalInterestRate","currency","initialExchangeDate",
-  #                       "premiumDiscountAtIED","maturityDate","notionalPrincipal",
-  #                       "rateSpread","description")]
-  #   ptf_df
-  # })
-  # 
   ## Timeline setup
   
   statusDate <- reactive({as.character(input$statusDate)})
@@ -105,69 +80,14 @@ function(input, output, session) {
     }
   })
   
-  
-  # observeEvent(input$timelineButton, {
-  #   req(input$statusDate, input$monthsPerPeriod, input$reportCount, input$periodCount)
-  #   tl <- Timeline(
-  #     statusDate = as.character(input$statusDate),
-  #     monthsPerPeriod = input$monthsPerPeriod,
-  #     reportCount = input$reportCount,
-  #     periodCount = input$periodCount
-  #   )
-  #   timeline(tl)
-  # })
-  
   financialModel <- reactiveVal({})
   
   observeEvent(input$setFinancialModelButton, {
-    # # set accounts
-    # if (input$selectAccounts == "Powerplant") {
-    #   tree <- AccountsTree("./data/powerplant.yaml")
-    # } else if (input$selectAccounts == "Uploaded"){
-    #   req(input$accountsFile)
-    #   tree <- AccountsTree(input$accountsFile$datapath)
-    # }
-    # accounts(tree)
-    
-    # # set portfolio
-    # if (input$selectPortfolio == "Bonds") {
-    #   ptf <- csvx2ptf("./data/BondPortfolio.csv")
-    #   ptf_df <- read.csv("./data/BondPortfolio.csv")
-    # } else if (input$selectPortfolio == "Annuities") {
-    #   ptf <- csvx2ptf("./data/AnnuityPortfolio.csv")
-    #   ptf_df <- read.csv("./data/AnnuityPortfolio.csv")
-    # } else if (input$selectPortfolio == "Uploaded"){
-    #   req(input$portfolioFile)
-    #   ptf <- csvx2ptf(input$portfolioFile$datapath)
-    #   ptf_df <- read.csv(input$portfolioFile$datapath)
-    # }
-    # portfolio(ptf)
-    # 
-    # ptf_df <- ptf_df[,c("contractType","statusDate","contractRole","contractID",
-    #                     "nominalInterestRate","currency","initialExchangeDate",
-    #                     "premiumDiscountAtIED","maturityDate","notionalPrincipal",
-    #                     "rateSpread","description")]
-    # portfolio_df(ptf_df)
-    
-    # # set timeline
-    # timevec <- c(3, 6, 12)
-    # names(timevec) <- c("Quarterly", "Semi-Annual", "Annual")
-    # tl <- Timeline(
-    #   statusDate = statusDate(),
-    #   monthsPerPeriod = as.numeric(timevec[reportFrequency()]),
-    #   reportCount = reportCount(),
-    #   periodCount = 2*reportCount()
-    # )
-    # if(input$customReportDates){
-    #   tl$reportDates <- as.character(input$reportDates)
-    # }
-    # timeline(tl)
-    
     fm <- initFinancialModel(
       fmID = financialModelID(),
       fmDescr = financialModelDescription(),
       entprID = enterpriseID(),
-      accounts = accounts()$root,
+      accntsTree = accounts(),
       ptf = portfolio(),
       curr = currency(),
       timeline = timeline(),
@@ -176,33 +96,44 @@ function(input, output, session) {
     financialModel(fm)
   })
   
-  output$financialMod <- renderPrint({
-    # financialModelID()
-    # financialModelDescription()
-    # enterpriseID()
-    # currency()
-    # accounts()$root
-    # portfolio()$contracts[1:2]
-    # timeline()
-    # serverURL()
-    # financialModel()$timeline
-  })
-
-  output$tree <- renderPrint({
+  # Current Settings tabpanel
+  output$curAccounts <- renderPrint({
     accounts()$root
   })
   
-  output$portfolioTable <- renderDataTable(portfolio_df(), 
+  output$curTreemap <- renderDataTable({
+    ToDataFrameTable(accounts()$root, "name", "nodeID", "actusCIDs", "formulaCIDs")
+  })
+  
+  output$curPortfolioTable <- renderDataTable(portfolio_df(), 
                                            options = list(autoWidth = TRUE, scrollX = TRUE))
   
+  output$curTimeline <- renderPrint({
+    timeline()
+  })
   
+  # Stored Financial Model tabpanel
+  output$fmAccounts <- renderPrint({
+    req(financialModel())
+    financialModel()$accountsTree$root
+  })
+  
+  output$fmTreemap <- renderDataTable({
+    req(financialModel())
+    ToDataFrameTable(financialModel()$accountsTree$root, "name", "nodeID", "actusCIDs", "formulaCIDs")
+  })
+  
+  output$fmTimeline <- renderPrint({
+    req(financialModel())
+    financialModel()$timeline
+  })
   
   ### Portfolio Analysis Tab
   contractAttribute <- reactive({
     if(input$selectContractAttribute == "ACTUS Contract"){
       "actusCIDs"
-    } else if(input$selectContractAttribute == "Formula Contract"){
-      "formulaCIDs"
+    } else if(input$selectContractAttribute == "Functional Contracts"){
+      "functionIDs"
     }
   })
   
@@ -230,14 +161,14 @@ function(input, output, session) {
     updateSelectInput(session, "selectNode", choices = leaves())
   })
   
-  treemap <- reactive({
-    # req(financialModel())
-    ToDataFrameTable(accounts()$root, "name", "nodeID", "actusCIDs", "formulaCIDs")
-  })
-  
-  output$treemap <- renderDataTable({
-    treemap()
-  })
+  # treemap <- reactive({
+  #   # req(financialModel())
+  #   ToDataFrameTable(accounts()$root, "name", "nodeID", "actusCIDs", "formulaCIDs")
+  # })
+  # 
+  # output$treemap <- renderDataTable({
+  #   treemap()
+  # })
   
   # output$portfolio <- renderPrint({
   #   unlist(portfolio()$contracts)[1:2]
@@ -247,13 +178,10 @@ function(input, output, session) {
   #                                          options = list(autoWidth = TRUE, scrollX = TRUE))
   
   ### Simulation Tab
-  analysisID <- reactive({input$analysisID})
-  analysisDescription <- reactive({input$analysisDescription})
+  scenarioID <- reactive({input$scenarioID})
   
   yieldcurve <- reactive({
-    if (input$selectYieldCurve == "Empty"){
-      yc <- YieldCurve()
-    } else if (input$selectYieldCurve == "Flat"){
+    if (input$selectYieldCurve == "Flat"){
       tr <- c(1, 1.5, 2, 2.5)/100
       names(tr) <- c("1M", "1Y", "5Y", "15Y")
       yc <- YieldCurve(
@@ -261,7 +189,7 @@ function(input, output, session) {
         referenceDate = "2015-01-01",
         tenorRates = tr,
         dayCountConvention = "30E360",
-        compoundingFrequency = "NONE"
+        compoundingFrequency = "CONTINUOUS"
       )
     } else if (input$selectYieldCurve == "Steep"){
       tr <- c(1, 2, 4, 6)/100
@@ -271,7 +199,7 @@ function(input, output, session) {
         referenceDate = "2015-01-01",
         tenorRates = tr,
         dayCountConvention = "30E360",
-        compoundingFrequency = "NONE"
+        compoundingFrequency = "CONTINUOUS"
       )
     }
     yc
@@ -296,6 +224,8 @@ function(input, output, session) {
     scenario_df(monthlyAverageRate(sc_df))
   })
   
+  marketData <- reactive({list(scenario())})
+  
   plt <- reactive({
     ggplot(scenario_df(), aes(x=Date,y=Rate)) +
       geom_line(colour = "black") +
@@ -309,22 +239,6 @@ function(input, output, session) {
   # output$srv <- renderText({
   #   serverURL()
   # })
-  
-  cfla <- reactiveVal({
-    # req(input$analysisID, input$analysisDescription, input$enterpriseID)
-    # cfla <- ContractAnalysis(
-    #   analysisID = analysisID(),
-    #   analysisDescription = analysisDescription(),
-    #   enterpriseID = enterpriseID(),
-    #   yieldCurve = yieldcurve(),
-    #   portfolio = portfolio(),
-    #   currency = currency(),
-    #   scenario = list(scenario()),
-    #   actusServerURL = serverURL(),
-    #   timeline = timeline()
-    # )
-    # cfla
-  })
   
   # observeEvent(input$setAnalysisButton, {
   # })
@@ -355,87 +269,110 @@ function(input, output, session) {
   msg4 <- reactiveVal()
   msg5 <- reactiveVal()
   msg6 <- reactiveVal()
+  msg7 <- reactiveVal()
+  msg8 <- reactiveVal()
   
   observeEvent(input$setAnalysisButton, {
     req(financialModel())
-    cfa <- initContractAnalysis(
-      analysisID = analysisID(),
-      analysisDescription = analysisDescription(),
-      enterpriseID = enterpriseID(),
-      yieldCurve = yieldcurve(),
-      portfolio = portfolio(),
-      currency = currency(),
-      scenario = list(scenario()),
-      actusServerURL = serverURL(),
-      timeline = timeline()
-    )
-    cfla(cfa)
+    addScenarioAnalysis(fm = financialModel(), scnID = scenarioID(), 
+                        rfxs = marketData(), yc = yieldcurve())
     msg1(NULL)
     msg2(NULL)
     msg3(NULL)
     msg4(NULL)
     msg5(NULL)
     msg6(NULL)
-    msg1(generateEvents(cntan = cfla()))
-    msg2(events2dfByPeriod(cfla = cfla()))
-    msg3(liquidityByPeriod2vec(cfla = cfla()))
-    msg4(lv2LiquidityReports(cfla= cfla()))
-    msg5(eventsdf2incomeReports(cfla = cfla()))
-    # msg6(nominalValueReports(cntan = cfla()))
+    msg7(NULL)
+    msg8(NULL)
+    msg1(generateEvents(host = financialModel()))
+    msg2(events2dfByPeriod(host = financialModel()))
+    msg3(nominalValueReports(host = financialModel()))
+    msg4(accountNMVreports(host = financialModel()))
+    msg5(liquidityReports(host = financialModel()))
+    msg6(accountLQreports(host = financialModel()))
+    msg7(netPresentValueReports(host = financialModel()))
+    msg8(accountNPVreports(host = financialModel()))
   })
   
-  # output$cfla <- renderPrint({
-  #   cfla()$analysisID
-  #   cfla()$timeline
-  # })
-  
-  # output$list <- renderPrint({
-  #   req(msg1())
-  #   cfla()$cashflowEventsLoL[[1]]
-  # })
-  
-  output$events <- renderPrint({
-    req(msg2())
-    head(cfla()$cashflowEventsByPeriod, 20)
+  output$eventsLog <- renderText({
+    req(msg1(), msg2())
+    HTML(paste(msg1(), paste("Events dataframe:", msg2()), sep="<br/>"))
   })
   
-  # output$liqvec <- renderPrint({
-  #   req(msg3())
-  #   cfla()$contractLiquidityVectors
-  # })
-  
-  output$liqrep <- renderPrint({
-    req(msg4())
-    cfla()$liquidityReports
+  output$NMVLog <- renderText({
+    req(msg3(), msg4())
+    HTML(paste(msg3(), msg4(), sep="<br/>"))
   })
   
-  output$increp <- renderPrint({
-    req(msg5())
-    cfla()$incomeReports
+  output$LQLog <- renderText({
+    req(msg5(), msg6())
+    HTML(paste(msg5(), msg6(), sep="<br/>"))
   })
   
-  output$nomrep <- renderPrint({
-    req(msg6())
-    cfla()$nominalValueReports
+  output$NPVLog <- renderText({
+    req(msg7(), msg8())
+    HTML(paste(msg7(), msg8(),sep="<br/>"))
   })
-  
-  output$eventsTable <- renderDataTable({
-    req(msg2())
-    cfla()$cashflowEventsByPeriod},
-    options = list(autoWidth = TRUE, scrollX = TRUE)
-  )
   
   ### Analytical Results Tab
+  print_sc <- reactive({
+    print_scale <- c("", "thousand", "million", "Billion")
+    names(print_scale) <- c("None", "1k", "1M", "1B")
+    as.character(print_scale[input$selectScale])
+  })
+  
   scale <- reactive({
     scales <- c(1, 1e3, 1e6, 1e9)
     names(scales) <- c("None", "1k", "1M", "1B")
     as.numeric(scales[input$selectScale])
+    
   })
   
   roundDigits <- reactive({input$selectDigits})
   
   # output$scale <- renderPrint({
   #   scale()
+  # })
+  
+  # output$nommatrix <- renderPrint({
+  #   req(msg4())
+  #   getNMVreports(financialModel(),scale(), roundDigits())
+  # })
+  
+  output$nomrep <- renderPrint({
+    req(msg4())
+    showNMVreports(financialModel(), scale(), roundDigits())
+  })
+  
+  output$lqrep <- renderPrint({
+    req(msg6())
+    showLQreports(financialModel(), scale(), roundDigits())
+  })
+  
+  output$npvrep <- renderPrint({
+    req(msg8())
+    showNPVreports(financialModel(), scale(), roundDigits())
+  })
+  
+  output$notAvailable <- renderPrint({
+    "Not available yet."
+  })
+  
+  output$display <- renderUI({
+    if(input$selectReportType == "Liquidity"){
+      verbatimTextOutput("lqrep")
+    } else if(input$selectReportType == "Nominal Value"){
+      verbatimTextOutput("nomrep")
+    } else if(input$selectReportType == "Net Present Value"){
+      verbatimTextOutput("npvrep")
+    } else if(input$selectReportType == "Income"){
+      verbatimTextOutput("notAvailable")
+    }
+  })
+  
+  # output$nomDT <- renderDataTable({
+  #   req(msg4())
+  #   showNMVreports(financialModel())
   # })
   
   nodes <- reactive({
@@ -450,8 +387,29 @@ function(input, output, session) {
     updateSelectInput(session, "selectDrilldownNode", choices = nodes())
   })
   
-  selectedPtf <- reactive({
+  output$displaySettings <- renderPrint({
+    HTML(paste(input$selectReportType, "in", print_sc(), currency()))
+  })
+  
+  drilldown_df <- reactive({
+    if(input$selectReportType == "Liquidity"){
+      showContractLQs(financialModel(), scale(), roundDigits())
+    } else if(input$selectReportType == "Nominal Value"){
+      showContractNMVs(financialModel(), scale(), roundDigits())
+    } else if(input$selectReportType == "Net Present Value"){
+      showContractNPVs(financialModel(), scale(), roundDigits())
+    } else if(input$selectReportType == "Income"){
+      data.frame()
+    }
+  })
+  
+  output$drilldown <- renderDataTable({
     req(input$selectDrilldownNode)
+    df <- drilldown_df()
+    contracts <- fm$accountsTree$root$Get("actusCIDs", filterFun = function(node) node$name %in% names(FindNode(fm$accountsTree$root, input$selectDrilldownNode)$Get("children")))
+    unlist(contracts)
+    df <- df[df$actusCIDs %in% unlist(contracts),]
+    df
   })
   
   # Financial Reports Tab
@@ -677,8 +635,67 @@ function(input, output, session) {
     }
   })
   
+  ## Plots
+  # get available positions from drill down part
+  observe({
+    updateSelectInput(session, "selectPosition", choices = nodes())
+  })
+  
+  sign <- reactive({
+    if(input$selectPosition %in% names(FindNode(fm$accountsTree$root, "Liabilities")$Get("children"))){
+      - 1
+    } else{
+      1
+    }
+  })
+  
+  output$liquidityPlot <- renderPlot({
+    req(input$selectPosition)
+    matrix <- getLQreports(financialModel(), scale(), roundDigits())
+    if(!(input$selectPosition %in% rownames(matrix))){return(NULL)}
+    plot_data <- (data.frame(date = colnames(matrix), values = matrix[input$selectPosition,]))
+    
+    ggplot(data = plot_data, aes(x = date, y = values)) +
+      geom_bar(stat = "identity") +
+      labs(title = paste("Liquidity for", input$selectPosition), x = "Date", y = paste("Liquidity in", print_sc(), currency()))
+  })
+  
+  output$NMVPlot <- renderPlot({
+    req(input$selectPosition)
+    matrix <- getNMVreports(financialModel(), scale(), roundDigits())
+    if(!(input$selectPosition %in% rownames(matrix))){return(NULL)}
+    plot_data <- (data.frame(date = colnames(matrix), values = sign()*matrix[input$selectPosition,]))
+    
+    ggplot(data = plot_data, aes(x = date, y = values)) +
+      geom_bar(stat = "identity") +
+      labs(title = paste("Nominal Value for", input$selectPosition), x = "Date", y = paste("Nominal Value in", print_sc(), currency()))
+  })
+  
+  output$NPVPlot <- renderPlot({
+    req(input$selectPosition)
+    matrix <- getNPVreports(financialModel(), scale(), roundDigits())
+    if(!(input$selectPosition %in% rownames(matrix))){return(NULL)}
+    plot_data <- (data.frame(date = colnames(matrix), values = sign()*matrix[input$selectPosition,]))
+    
+    ggplot(data = plot_data, aes(x = date, y = values)) +
+      geom_bar(stat = "identity") +
+      labs(title = paste("Net Present Value for", input$selectPosition), x = "Date", y = paste("Net Present Value in", print_sc(), currency()))
+  })
+  
+  output$incomePlot <- renderPlot({
+    req(input$selectPosition)
+    return(NULL)
+    matrix <- getNPVreports(financialModel(), scale(), roundDigits())
+    if(!(input$selectPosition %in% rownames(matrix))){return(NULL)}
+    plot_data <- (data.frame(date = colnames(matrix), values = matrix[input$selectPosition,]))
+    
+    ggplot(data = plot_data, aes(x = date, y = values)) +
+      geom_bar(stat = "identity") +
+      labs(title = paste("Income for", input$selectPosition), x = "Date", y = paste("Income in", print_sc(), currency()))
+  })
+  
   ### Reporting Tab
-  source(paste0("./data_patrick/reportingDemoFiles/fnc_ReportingDemo.R"))
+  source(paste0("./data_patrick/reportingDemoFiles/fnc_reportingDemo.R"))
   datapath <- paste0("./data_patrick/reportingDemoFiles/") #path to the demo files
   
   # Observe reporting
@@ -727,7 +744,7 @@ function(input, output, session) {
     
     
     
-    output$portfolioDF <- renderDataTable(evTab_WithDates()[eval(parse(text=customfilter())),.(Cashflow=sum(payoff), NrOfAggregatedPositions =.N), by= .(reportingLineDesc, reportingLine, TimeBucket, type, currency)],
+    output$portfolioDF <- renderDataTable(evTab_WithDates()[eval(parse(text=customfilter())),.(Cashflow=round(sum(payoff), 0), NrOfAggregatedPositions =.N), by= .(reportingLineDesc, reportingLine, TimeBucket, type, currency)],
                                           options = list(autoWidth = TRUE, scrollX = TRUE))
     
   })
